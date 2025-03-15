@@ -1,316 +1,269 @@
-# Inventory Management System - Microservices Assessment Guide
+# ProductService Implementation Guide
 
-## Overview
-A retail business is struggling to keep track of inventory levels and manage customer orders efficiently. The business operates two distinct functions: managing product stock and handling customer orders. Currently, these functions are handled manually, leading to inefficiencies and errors. This project aims to automate these processes using microservices.
+This guide provides step-by-step instructions to develop the ProductService, including database integration and API implementation.
 
-## Project Structure
-You will develop two microservices:
-- **InventoryService** (Manages product stock)
-- **OrderService** (Handles customer orders)
+## Table of Contents
+- [1. Create ProductService](#1-create-productservice)
+- [2. Define Product Model](#2-define-product-model)
+- [3. Implement Product Repository](#3-implement-product-repository)
+- [4. Implement Product API](#4-implement-product-api)
+- [5. Database Integration](#5-database-integration)
+- [6. Testing ProductService](#6-testing-productservice)
 
-Both microservices will interact via REST APIs. The OrderService will verify product availability with InventoryService and update product stock after an order is placed.
+## 1. Create ProductService
+Create a new .NET Web API project:
+```sh
+dotnet new webapi -n ProductService
+cd ProductService
+```
 
-## Technology Stack
-- **.NET 6+**
-- **Entity Framework Core (Code First Approach)**
-- **MS SQL Server**
-- **Swagger**
-- **REST APIs**
-- **Microservices Architecture**
+Install required NuGet packages:
+```sh
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+```
 
-## Setup Instructions
-
-### Step 1: Open Project in Visual Studio
-1. Navigate to the **Project folder** on the Lab Desktop.
-2. Open the folder in **Visual Studio**.
-3. Ensure that all dependencies are installed via NuGet.
-
-### Step 2: Setting Up Databases
-
-#### InventoryService
-1. Open terminal in **InventoryService** project folder.
-2. Run the following commands:
-   ```powershell
-   dotnet tool install --global dotnet-ef
-   dotnet ef migrations add InitialCreate
-   dotnet ef database update
-   ```
-
-#### OrderService
-1. Open terminal in **OrderService** project folder.
-2. Run the following commands:
-   ```powershell
-   dotnet tool install --global dotnet-ef
-   dotnet ef migrations add InitialCreate
-   dotnet ef database update
-   ```
-
-### Step 3: Implement InventoryService
-
-#### Product Model
-Located in `Models/Product.cs`:
+## 2. Define Product Model
+Create a `Models` folder and add `Product.cs`:
 ```csharp
-public class Product
-{
-    public int ProductId { get; set; }
+public class Product {
+    public int Id { get; set; }
     public string Name { get; set; }
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
+    public int Stock { get; set; }
 }
 ```
 
-#### InventoryDbContext
-Located in `Data/InventoryDbContext.cs`:
+## 3. Implement Product Repository
+Create `Repositories/IProductRepository.cs`:
 ```csharp
-public class InventoryDbContext : DbContext
-{
-    public InventoryDbContext(DbContextOptions<InventoryDbContext> options) : base(options) {}
+public interface IProductRepository {
+    Task<Product> GetProductByIdAsync(int id);
+    Task AddProductAsync(Product product);
+    Task UpdateProductAsync(Product product);
+}
+```
+
+Create `Repositories/ProductRepository.cs`:
+```csharp
+public class ProductRepository : IProductRepository {
+    private readonly ProductDbContext _context;
+    public ProductRepository(ProductDbContext context) {
+        _context = context;
+    }
+    public async Task<Product> GetProductByIdAsync(int id) => await _context.Products.FindAsync(id);
+    public async Task AddProductAsync(Product product) {
+        _context.Products.Add(product);
+        await _context.SaveChangesAsync();
+    }
+    public async Task UpdateProductAsync(Product product) {
+        _context.Products.Update(product);
+        await _context.SaveChangesAsync();
+    }
+}
+```
+
+## 4. Implement Product API
+Create `Controllers/ProductController.cs`:
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class ProductController : ControllerBase {
+    private readonly IProductRepository _productRepository;
+    
+    public ProductController(IProductRepository productRepository) {
+        _productRepository = productRepository;
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProduct(int id) {
+        var product = await _productRepository.GetProductByIdAsync(id);
+        if (product == null) return NotFound("Product not available.");
+        return Ok(product);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddProduct([FromBody] Product product) {
+        await _productRepository.AddProductAsync(product);
+        return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+    }
+
+    [HttpPut("{id}/Stock")]
+    public async Task<IActionResult> UpdateStock(int id, [FromBody] int stock) {
+        var product = await _productRepository.GetProductByIdAsync(id);
+        if (product == null) return NotFound("Product not available.");
+        product.Stock = stock;
+        await _productRepository.UpdateProductAsync(product);
+        return Ok(product);
+    }
+}
+```
+
+## 5. Database Integration
+Create `Data/ProductDbContext.cs`:
+```csharp
+public class ProductDbContext : DbContext {
+    public ProductDbContext(DbContextOptions<ProductDbContext> options) : base(options) {}
     public DbSet<Product> Products { get; set; }
 }
 ```
 
-#### ProductRepository
-Located in `Repositories/ProductRepository.cs`:
+Configure dependency injection in `Program.cs`:
 ```csharp
-public class ProductRepository : IProductRepository
-{
-    private readonly InventoryDbContext _context;
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<ProductDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
-    public ProductRepository(InventoryDbContext context)
-    {
+var app = builder.Build();
+app.UseRouting();
+app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+app.Run();
+```
+
+## 6. Testing ProductService
+1. **Start ProductService** (`http://localhost:5118/swagger/index.html`).
+2. **Test Cases**:
+   - **Retrieve Product by ID**
+   - **Add New Product**
+   - **Update Product Stock**
+
+Follow these steps to successfully implement and test ProductService!
+
+
+
+# OrderService Implementation Guide
+
+This guide provides step-by-step instructions to develop the OrderService, including database integration and microservice communication with InventoryService.
+
+## Table of Contents
+- [1. Create OrderService](#1-create-orderservice)
+- [2. Define Order Model](#2-define-order-model)
+- [3. Implement Order Repository](#3-implement-order-repository)
+- [4. Implement Order API](#4-implement-order-api)
+- [5. Implement Microservice Communication](#5-implement-microservice-communication)
+- [6. Database Integration](#6-database-integration)
+- [7. Testing OrderService](#7-testing-orderservice)
+
+## 1. Create OrderService
+Create a new .NET Web API project:
+```sh
+dotnet new webapi -n OrderService
+cd OrderService
+```
+
+Install required NuGet packages:
+```sh
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+```
+
+## 2. Define Order Model
+Create a `Models` folder and add `Order.cs`:
+```csharp
+public class Order {
+    public int Id { get; set; }
+    public int ProductId { get; set; }
+    public int Quantity { get; set; }
+    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+}
+```
+
+## 3. Implement Order Repository
+Create `Repositories/IOrderRepository.cs`:
+```csharp
+public interface IOrderRepository {
+    Task AddOrderAsync(Order order);
+}
+```
+
+Create `Repositories/OrderRepository.cs`:
+```csharp
+public class OrderRepository : IOrderRepository {
+    private readonly OrderDbContext _context;
+    public OrderRepository(OrderDbContext context) {
         _context = context;
     }
-
-    public async Task AddProductAsync(Product product)
-    {
-        _context.Products.Add(product);
+    public async Task AddOrderAsync(Order order) {
+        _context.Orders.Add(order);
         await _context.SaveChangesAsync();
-    }
-
-    public async Task<Product> GetProductByIdAsync(int productId)
-    {
-        return await _context.Products.FindAsync(productId);
-    }
-
-    public async Task UpdateProductStockAsync(int productId, int quantity)
-    {
-        var product = await _context.Products.FindAsync(productId);
-        if (product != null)
-        {
-            product.Quantity = quantity;
-            await _context.SaveChangesAsync();
-        }
     }
 }
 ```
 
-#### ProductController
-Located in `Controllers/ProductController.cs`:
+## 4. Implement Order API
+Create `Controllers/OrderController.cs`:
 ```csharp
 [ApiController]
-[Route("api/Product")]
-public class ProductController : ControllerBase
-{
-    private readonly IProductRepository _repository;
+[Route("api/[controller]")]
+public class OrderController : ControllerBase {
+    private readonly IOrderRepository _orderRepository;
+    private readonly HttpClient _httpClient;
 
-    public ProductController(IProductRepository repository)
-    {
-        _repository = repository;
+    public OrderController(IOrderRepository orderRepository, HttpClient httpClient) {
+        _orderRepository = orderRepository;
+        _httpClient = httpClient;
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddProduct([FromBody] Product product)
-    {
-        await _repository.AddProductAsync(product);
-        return StatusCode(201, new { message = "Product created successfully" });
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetProduct(int id)
-    {
-        var product = await _repository.GetProductByIdAsync(id);
-        if (product == null)
-            return NotFound(new { message = "Product not found" });
-        return Ok(product);
-    }
-
-    [HttpPut("{id}/Stock")]
-    public async Task<IActionResult> UpdateStock(int id, [FromBody] int quantity)
-    {
-        await _repository.UpdateProductStockAsync(id, quantity);
-        return Ok(new { message = "Product stock updated successfully" });
-    }
-}
-```
-
-#### Dependency Injection in `Program.cs`
-```csharp
-builder.Services.AddDbContext<InventoryDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddTransient<IProductRepository, ProductRepository>();
-```
-
-### Step 4: Implement OrderService
-#### Order Model
-Located in `Models/Order.cs`:
-```csharp
-public class Order
-{
-    public int OrderId { get; set; }
-    public int ProductId { get; set; }
-    public int Quantity { get; set; }
-}
-```
-
-#### OrderController
-Located in `Controllers/OrderController.cs`:
-```csharp
-[HttpPost]
-public async Task<IActionResult> PlaceOrder([FromBody] Order order)
-{
-    using (var httpClient = new HttpClient())
-    {
-        var productResponse = await httpClient.GetAsync($"http://localhost:5118/api/Product/{order.ProductId}");
-        if (!productResponse.IsSuccessStatusCode)
+    public async Task<IActionResult> PlaceOrder([FromBody] Order order) {
+        var response = await _httpClient.GetAsync($"http://localhost:5118/api/Product/{order.ProductId}");
+        if (!response.IsSuccessStatusCode)
             return BadRequest("Product not available.");
-        
-        var product = JsonConvert.DeserializeObject<Product>(await productResponse.Content.ReadAsStringAsync());
-        if (product.Quantity < order.Quantity)
+
+        var product = await response.Content.ReadFromJsonAsync<ProductDTO>();
+        if (product.Stock < order.Quantity)
             return BadRequest("Insufficient stock for the product.");
-        
-        var updateStock = new StringContent(JsonConvert.SerializeObject(product.Quantity - order.Quantity), Encoding.UTF8, "application/json");
-        await httpClient.PutAsync($"http://localhost:5118/api/Product/{order.ProductId}/Stock", updateStock);
-        
-        await _repository.AddOrderAsync(order);
+
+        var stockUpdateResponse = await _httpClient.PutAsJsonAsync($"http://localhost:5118/api/Product/{order.ProductId}/Stock", product.Stock - order.Quantity);
+        if (!stockUpdateResponse.IsSuccessStatusCode)
+            return StatusCode(500, "Error updating stock.");
+
+        await _orderRepository.AddOrderAsync(order);
         return Ok(new { message = "Order placed successfully." });
     }
 }
-```
 
-### Step 5: Run and Test the Application
-1. Start **InventoryService** (`http://localhost:5118/swagger/index.html`).
-2. Start **OrderService** (`http://localhost:5058/swagger/index.html`).
-3. Use **Swagger** or Postman to test the endpoints.
-
-### Step 6: Run Test Cases
-Verify the following:
-- Database setup (`dotnet ef database update` for both services).
-- POST Product API (`/api/Product` - Adds a product).
-- GET Product API (`/api/Product/{id}` - Retrieves product details).
-- PUT Update Stock API (`/api/Product/{id}/Stock` - Updates stock).
-- POST Order API (`/api/Order` - Places an order correctly).
-
-# Configuring Dependency Injection in Program.cs
-
-## Dependency Injection Setup for InventoryService
-
-In the `InventoryService` microservice, configure dependency injection in `Program.cs` as follows:
-
-### Steps:
-1. **Register the Database Context** using Entity Framework Core.
-2. **Register the Repository** as a service.
-3. **Configure Controllers and Swagger** for API documentation.
-
-### `Program.cs` Code for `InventoryService`
-
-```csharp
-using InventoryService.Data;
-using InventoryService.Repositories;
-using Microsoft.EntityFrameworkCore;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllers();
-
-// Configure Database Context
-builder.Services.AddDbContext<InventoryDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register Repository
-builder.Services.AddTransient<IProductRepository, ProductRepository>();
-
-// Add Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+public class ProductDTO {
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Stock { get; set; }
 }
-
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
 ```
 
----
+## 5. Implement Microservice Communication
+- **Retrieves product details** using an HTTP GET request.
+- **Checks stock availability** before placing an order.
+- **Updates stock** using an HTTP PUT request.
+- **Saves order** if stock update is successful.
 
-## Dependency Injection Setup for OrderService
-
-In the `OrderService` microservice, configure dependency injection in `Program.cs` as follows:
-
-### Steps:
-1. **Register the Database Context** using Entity Framework Core.
-2. **Register the Repository** as a service.
-3. **Configure HttpClient** for communication with InventoryService.
-4. **Configure Controllers and Swagger** for API documentation.
-
-### `Program.cs` Code for `OrderService`
-
+## 6. Database Integration
+Create `Data/OrderDbContext.cs`:
 ```csharp
-using OrderService.Data;
-using OrderService.Repositories;
-using Microsoft.EntityFrameworkCore;
+public class OrderDbContext : DbContext {
+    public OrderDbContext(DbContextOptions<OrderDbContext> options) : base(options) {}
+    public DbSet<Order> Orders { get; set; }
+}
+```
 
+Configure dependency injection in `Program.cs`:
+```csharp
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllers();
-
-// Configure Database Context
 builder.Services.AddDbContext<OrderDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register Repository
-builder.Services.AddTransient<IOrderRepository, OrderRepository>();
-
-// Register HttpClient for calling InventoryService
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddHttpClient();
 
-// Add Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseAuthorization();
-app.MapControllers();
+app.UseRouting();
+app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 app.Run();
 ```
 
-### Summary
-- Both microservices register their respective database contexts using `AddDbContext`.
-- The repository pattern is implemented using `AddTransient`.
-- Swagger is enabled for API documentation.
-- `OrderService` uses `AddHttpClient` for making API calls to `InventoryService`.
+## 7. Testing OrderService
+1. **Start InventoryService** (`http://localhost:5118/swagger/index.html`).
+2. **Start OrderService** (`http://localhost:5058/swagger/index.html`).
+3. **Test Cases**:
+   - **Successful Order Placement**
+   - **Product Not Found**
+   - **Insufficient Stock**
 
-These configurations ensure that the services are properly injected and available for dependency resolution within the microservices.
-
-
----
-Ensure all breakpoints are removed before submission.
-
-Happy coding! 🚀
+Follow these steps to successfully implement and test OrderService!
 
