@@ -45,7 +45,7 @@ namespace ProductService.Controllers
                 return BadRequest(new { message = "Stock quantity cannot be negative" });
             }
             await _productRepository.UpdateProductAsync(id, stock);
-            return Ok("Product stock updated successfully");
+            return StatusCode(200, new { message = "Product stock updated successfully" });
         }
     }
 }
