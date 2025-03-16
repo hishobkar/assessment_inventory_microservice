@@ -31,7 +31,17 @@ public class Product {
     public int Stock { get; set; }
 }
 ```
+## Setting Up Databases
 
+ #### InventoryService
+ 1. Open terminal in **InventoryService** project folder.
+ 2. Run the following commands:
+    ```powershell
+    dotnet tool install --global dotnet-ef
+    dotnet ef migrations add InitialCreate
+    dotnet ef database update
+    ```
+	
 ## 3. Implement Product Repository
 Create `Repositories/IProductRepository.cs`:
 ```csharp
@@ -166,6 +176,17 @@ public class Order {
 }
 ```
 
+## Setting Up Databases
+
+ #### OrderService
+ 1. Open terminal in **OrderService** project folder.
+ 2. Run the following commands:
+    ```powershell
+    dotnet tool install --global dotnet-ef
+    dotnet ef migrations add InitialCreate
+    dotnet ef database update
+    ```
+	
 ## 3. Implement Order Repository
 Create `Repositories/IOrderRepository.cs`:
 ```csharp
