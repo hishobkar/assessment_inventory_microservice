@@ -38,10 +38,12 @@ namespace OrderService.Controllers
 
             var stockUpdateResponse = await _httpClient.PutAsJsonAsync($"https://localhost:5118/api/Product/{order.ProductId}/Stock", product.Quantity - order.Quantity);
             if (!stockUpdateResponse.IsSuccessStatusCode)
+            {
                 return StatusCode(500, "Failed to update stock");
+            }
 
             await _orderRepository.AddOrderAsync(order);
-            return Ok(new { message = "Order placed successfully" });
+            return Ok(new { message = "Order placed successfully." });
         }
     }
 
