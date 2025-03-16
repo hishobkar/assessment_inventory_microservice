@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrderService.Data;
+using OrderService.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,9 @@ builder.Services.AddSwaggerGen();
 string dbConStr = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<OrderDbContext>(options => options.UseSqlServer(dbConStr));
+
+builder.Services.AddScoped<OrderRepository>();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

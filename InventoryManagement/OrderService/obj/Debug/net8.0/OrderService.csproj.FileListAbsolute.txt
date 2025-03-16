@@ -171,8 +171,8 @@ D:\AccretionProjects\Github\assessment_inventory_microservice\Project_InventoryM
 D:\AccretionProjects\Github\assessment_inventory_microservice\Project_InventoryManagement\InventoryManagement\OrderService\obj\Debug\net8.0\OrderService.genruntimeconfig.cache
 D:\AccretionProjects\Github\assessment_inventory_microservice\Project_InventoryManagement\InventoryManagement\OrderService\obj\Debug\net8.0\ref\OrderService.dll
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\bin\Debug\net8.0\appsettings.Development.json
-D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\bin\Debug\net8.0\OrderService.staticwebassets.endpoints.json
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\bin\Debug\net8.0\appsettings.json
+D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\bin\Debug\net8.0\OrderService.staticwebassets.endpoints.json
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\bin\Debug\net8.0\OrderService.exe
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\bin\Debug\net8.0\OrderService.deps.json
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\bin\Debug\net8.0\OrderService.runtimeconfig.json
@@ -336,10 +336,10 @@ D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagemen
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.OrderService.props
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.OrderService.props
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\staticwebassets.pack.json
+D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\OrderSer.4493321F.Up2Date
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\OrderService.dll
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\refint\OrderService.dll
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\OrderService.pdb
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\OrderService.genruntimeconfig.cache
 D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\ref\OrderService.dll
-D:\AccretionProjects\Github\assessment_inventory_microservice\InventoryManagement\OrderService\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
