@@ -9,6 +9,6 @@ namespace ProductService.Data
         {   
         }
 
-        DbSet<Product> products { get; set; }
+        public DbSet<Product> Products { get; set; }
     }
 }
